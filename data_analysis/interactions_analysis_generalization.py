@@ -50,7 +50,7 @@ odds_ratio_threshold = .75
 
 
 
-
+#query data
 engine = create_engine('sqlite:////home/workspace/amr_db/narms_database.sqlite')
 session = sessionmaker(bind=engine)()
 
@@ -79,7 +79,7 @@ data_query = resistant_query.union(suscptable_query)
 data = read_sql(data_query.statement, engine)
 
  
-
+#transform data from query to table of counts
 data =  data.pivot('IsolateID', 'DrugID', 'Resistance')
 
 data.dropna(1,thresh=int(len(data)*.2), inplace=True)
@@ -92,7 +92,7 @@ if len(antibiotic_set) == 0:
 data.insert(0,'Count', 1)
 data = data.groupby(antibiotic_set).sum().reset_index()
 
-
+#add counts for missing combinations
 rows = []
 for row in product([0,1], repeat=len(antibiotic_set)):
     row_dict = {}
@@ -114,6 +114,7 @@ if draw_graph:
     for antibiotic in antibiotic_set:
         graph.add_node(antibiotic)
 
+#Calculate the odds rations and p-values for each interaction and output them as set in the flags above.
 pvalue_dict = {}
 for antibiotic_pair in combinations(antibiotic_set, dimention):
     if print_pvalue or print_raw_data or print_contingency_table or print_raw_odds_ratio:
